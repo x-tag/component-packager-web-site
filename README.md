@@ -6,7 +6,7 @@ This website allows you to pass a comma seperated list of Bower X-Tag component 
 // Return a zip of the core package
 /?package=x-tag-core
 
-// Returns a zip of the accordion control and all dependencies
+// Returns a zip of the accordion and flipbox controls, including dependencies
 /?package=x-tag-accordion,x-tag-flipbox
 
 
