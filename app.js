@@ -93,4 +93,6 @@ app.get('/', function(req, res){
   });
 });
 
-app.listen(3000);
+var port = process.env.PORT || process.env.VCAP_APP_PORT || 3001;
+console.log("Packager listening on port:", port)
+app.listen(port);
