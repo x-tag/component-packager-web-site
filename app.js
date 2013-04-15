@@ -1,21 +1,21 @@
 var fs = require('fs'),
   path = require('path'),
+  rimraf = require('rimraf'),
   express = require('express'),
-  temp = require('temp'),
   bower = require('bower'),
   crypto = require('crypto'),
   grunt = require('grunt'),
   Zip = require('express-zip');
   app = express();
 
-grunt.task.loadNpmTasks('grunt-smush-components');
+grunt.loadNpmTasks('grunt-smush-components');
+grunt.loadNpmTasks('grunt-yui-compressor');
 
 app.get('/', function(req, res){
-  var log = [],
-    dependencies = {};
+  var dependencies = {};
 
   if (!req.query.packages || req.query.packages.length == 0){
-    res.send('Package parameter is required.');
+    res.send('"packages" parameter is required.');
     res.end();
     return;
   }
@@ -30,10 +30,13 @@ app.get('/', function(req, res){
     outputDir = path.join(tempLocation, 'dist');
 
   fs.mkdir(tempLocation, function(err){
-    if(!err){
-      fs.chmodSync(tempLocation, "0755");
+    if(err){
+      res.send("There was an error processing this request.");
+      res.end();
+      return;
     }
 
+    fs.chmodSync(tempLocation, "0755");
     fs.writeFileSync(path.join(tempLocation, 'component.json'), JSON.stringify({
       name: 'temp-package',
       version: '0.0.0',
@@ -43,7 +46,6 @@ app.get('/', function(req, res){
     bower.commands.install([tempLocation], { config: { directory: componentsDir }})
       .on('data', function(data){
         console.log("Data:", data);
-        log.push(data);
       })
       .on('end', function(data){
 
@@ -54,7 +56,7 @@ app.get('/', function(req, res){
         }
 
         grunt.registerTask('smush','Combine the components', function(){
-          grunt.initConfig({
+          var gruntInit = {
             'smush-components': {
               options:{
                 directory: componentsDir,
@@ -63,25 +65,29 @@ app.get('/', function(req, res){
                   css: path.join(outputDir, 'x-tag-components.css')
                 }
               }
+            },
+            'min': {
+              dist: {
+                src: [path.join(outputDir, 'x-tag-components.js')],
+                dest: path.join(outputDir, 'x-tag-components.min.js')
+              }
+            },
+            'cssmin': {
+              dist: {
+                src: [path.join(outputDir, 'x-tag-components.css')],
+                dest: path.join(outputDir, 'x-tag-components.min.css')
+              }
             }
-          });
-          grunt.task.run('smush-components');
+          };
+          grunt.initConfig(gruntInit);
         });
 
-        grunt.tasks(['smush'], {verbose: true}, function(){
-          var logFile = path.join(outputDir,'log.txt');
-          fs.writeFile(logFile, log.join('\n'), function(err){
-            if (err) {
-              res.send(err);
-              res.end();
-            } else {
-              var files = [{ path: logFile, name: 'log.txt'}];
-              fs.readdirSync(outputDir).forEach(function(file){
-                files.push({ path: path.join(outputDir,file), name: file});
-              });
-              res.zip(files);
-            }
+        grunt.tasks(['smush','smush-components','min:dist','cssmin:dist'], { verbose: false }, function(){
+          var files = [];
+          fs.readdirSync(outputDir).forEach(function(file){
+            files.push({ path: path.join(outputDir,file), name: file});
           });
+          res.zip(files);
         });
 
       })
@@ -92,6 +98,24 @@ app.get('/', function(req, res){
       });
   });
 });
+
+// Clean up temp files
+function clearTempDir(){
+  var tempDir = path.join(__dirname, 'temp');
+  fs.readdir(tempDir, function(err, files){
+    files.map(function (file) {
+        return path.join(tempDir, file);
+      }).filter(function(file){
+        return fs.statSync(file).isDirectory();
+      }).forEach(function(file){
+        rimraf(file, function(err){
+          console.log("removed temp directory:", file);
+        });
+      });
+  });
+}
+
+clearTempDir();
 
 var port = process.env.PORT || process.env.VCAP_APP_PORT || 3001;
 console.log("Packager listening on port:", port)
