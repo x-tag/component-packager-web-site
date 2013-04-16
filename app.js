@@ -87,7 +87,7 @@ app.get('/', function(req, res){
           fs.readdirSync(outputDir).forEach(function(file){
             files.push({ path: path.join(outputDir,file), name: file});
           });
-          res.zip(files);
+          res.zip(files, 'x-tag-components.zip');
         });
 
       })
