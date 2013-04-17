@@ -2,7 +2,7 @@
   "name": "Component-Packager-Web-Site",
   "version": "0.1.1",
   "dependencies": {
-    "bower": "git://github.com/pennyfx/bower.git#config-override",
+    "bower": "git://github.com/pennyfx/bower.git#83c810bdee2c2da28815fc2019ac56d885755d74",
     "express": "~3.1.1",
     "express-zip": "~1.0.1",
     "grunt": "~0.4.1",
