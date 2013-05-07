@@ -10,6 +10,7 @@ var fs = require('fs'),
 
 grunt.loadNpmTasks('grunt-smush-components');
 grunt.loadNpmTasks('grunt-yui-compressor');
+grunt.loadNpmTasks('grunt-contrib-uglify');
 
 app.get('/', function(req, res){
   var dependencies = {};
@@ -66,10 +67,13 @@ app.get('/', function(req, res){
                 }
               }
             },
-            'min': {
-              dist: {
+            'uglify': {
+              /*dist: {
                 src: [path.join(outputDir, 'x-tag-components.js')],
                 dest: path.join(outputDir, 'x-tag-components.min.js')
+              }*/
+              dist: {
+                files: {}
               }
             },
             'cssmin': {
@@ -79,10 +83,12 @@ app.get('/', function(req, res){
               }
             }
           };
+          gruntInit.uglify.dist.files[path.join(outputDir,'x-tag-components.min.js')]
+            = [path.join(outputDir, 'x-tag-components.js')];
           grunt.initConfig(gruntInit);
         });
 
-        grunt.tasks(['smush','smush-components','min:dist','cssmin:dist'], { verbose: false }, function(){
+        grunt.tasks(['smush','smush-components','uglify:dist','cssmin:dist'], { verbose: true }, function(){
           var files = [];
           fs.readdirSync(outputDir).forEach(function(file){
             files.push({ path: path.join(outputDir,file), name: file});
