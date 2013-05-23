@@ -50,12 +50,6 @@ app.get('/', function(req, res){
       })
       .on('end', function(data){
 
-        if (!fs.existsSync(path.join(componentsDir, 'document.register'))) {
-          res.send('Only X-Tag packages are supported.');
-          res.end();
-          return;
-        }
-
         grunt.registerTask('smush','Combine the components', function(){
           var gruntInit = {
             'smush-components': {
@@ -68,10 +62,6 @@ app.get('/', function(req, res){
               }
             },
             'uglify': {
-              /*dist: {
-                src: [path.join(outputDir, 'x-tag-components.js')],
-                dest: path.join(outputDir, 'x-tag-components.min.js')
-              }*/
               dist: {
                 files: {}
               }
